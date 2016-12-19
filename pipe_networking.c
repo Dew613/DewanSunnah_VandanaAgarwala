@@ -7,9 +7,7 @@
 #include <sys/stat.h>
 
 
-#include "pipe_networking.h"
-
-int server_handshake( int *x){
+int server_handshake( int *from_client){
   //1) SErver creates FIFO (wkp)
   
   mkfifo("mario", 0644);
@@ -19,8 +17,8 @@ int server_handshake( int *x){
   int pd = open("mario",O_RDONLY);
   
   //6)server recieves client's fifo
-  char pn[100];
-  read(pd, pn, sizeof(pn));
+  char pn[13];
+  read(pd, pn, 13);
   printf("[SERVER] Connected to Client %s\n", pn);
 
   //6.5) creating sub server
@@ -31,18 +29,19 @@ int server_handshake( int *x){
     commands[0] = "rm";
     commands[1] = "mario";
     commands[2] = NULL;
-    int e = execvp(commands[0], commands);
-    printf("[SUBSERVER %s] removed wkp\n", pn);
+    printf("[SUBSERVER %s] removed wkp", pn);
+    int check = execvp (commands[0],commands);
   }
   //7) send confirmation code
   int cp = open(pn, O_WRONLY);
-  write(cp, "Hello Client", strlen("Hello Client"));
+  write(cp, "Hello Client", strlen("Hello Client")+1);
+  printf("[Server] sending confirmation message\n");
 
   return cp;
 }
 
 
-int client_handshake( int *x){
+int client_handshake( int *to_server){
   //3)client creats private FIFO
   char p[100];
   int pid = getpid();
@@ -52,30 +51,26 @@ int client_handshake( int *x){
   
   //4) client connects to server and sends private fifo
   int pd = open ("mario", O_WRONLY);
-  printf("[Client %s] connected to server\n", p);
+  printf("[Client %d] connected to server\n", pid);
   write(pd, p, strlen(p));
-  printf("[Client %s] sending information\n", p);
+  printf("[Client %d] sending information: %s\n", pid, p);
   
   //8) client recieves server's message throught private pipe
   int cp;
   cp= open (p, O_RDONLY);
-  char smessage[100];
-  read (cp, smessage, 100);
-  printf("[Client %s] recieved message: %s\n", p, smessage);
-  //9) client removes private pipe
-  int f= fork();
-  if (f==0){
+  printf("[Client %d] connected privately to server", pid);
+
+  char smessage[26];
+  read (cp, smessage, 26);
+  printf("[Client %d] recieved message: %s\n", pid, smessage);
+
+  int f = fork();
+  if (f == 0){
     char * commands[3];
     commands[0] = "rm";
-    commands[1] = p;
+    commands[1] = smessage;
     commands[2] = NULL;
-    int e = execvp(commands[0], commands);
-    printf ("[Client %s] removed private pipe\n", p);
-}
-  //10)client sends confirmation
-  write (cp, "Hello SERVER", 13);
-  printf("[Client %s] sending message: Hello SERVER", p);
-
-
+    printf("[Client %d] removed private pipe\n", pid);
+  }
   return cp;
 }
