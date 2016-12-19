@@ -23,7 +23,7 @@ int server_handshake( int *from_client){
 
   //6.55) removing wkp
   remove("mario");
-  printf("[SERVER] removed wkp");
+  printf("[SERVER] removed wkp\n");
   //7) send confirmation code
   int cp = open(pn, O_WRONLY);
   write(cp, "Hello Client", strlen("Hello Client")+1);
