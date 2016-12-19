@@ -38,13 +38,14 @@ int client_handshake( int *to_server){
   char p[100];
   int pid = getpid();
   sprintf(p, "%d", pid);
+
   mkfifo(p, 0644);
   printf("[Client %s] created private named pipe: %s \n", p,p);
   
   //4) client connects to server and sends private fifo
   int pd = open ("mario", O_WRONLY);
   printf("[Client %d] connected to server\n", pid);
-  write(pd, p, strlen(p));
+  write(pd, p, sizeof(p));
   printf("[Client %d] sending information: %s\n", pid, p);
   
   //8) client recieves server's message throught private pipe
@@ -58,6 +59,6 @@ int client_handshake( int *to_server){
 
   remove(p);
   printf("[Client %d] removed private pipe\n", pid);
-  *to_server = cp;
+  *to_server = pd;
   return cp;
 }
