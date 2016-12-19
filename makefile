@@ -3,4 +3,4 @@ compile:pipe_networking.c
 	gcc client.c pipe_networking.c -o client
 
 clean:
-	rm -f *~ *.out *.o *.txt
+	rm -f *~ *.o 

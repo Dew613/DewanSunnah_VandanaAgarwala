@@ -21,22 +21,14 @@ int server_handshake( int *from_client){
   read(pd, pn, 13);
   printf("[SERVER] Connected to Client %s\n", pn);
 
-  //6.5) creating sub server
-  int f = fork();
   //6.55) removing wkp
-  if (f == 0){
-    char * commands[3];
-    commands[0] = "rm";
-    commands[1] = "mario";
-    commands[2] = NULL;
-    printf("[SUBSERVER %s] removed wkp", pn);
-    int check = execvp (commands[0],commands);
-  }
+  remove("mario");
+  printf("[SERVER] removed wkp");
   //7) send confirmation code
   int cp = open(pn, O_WRONLY);
   write(cp, "Hello Client", strlen("Hello Client")+1);
   printf("[Server] sending confirmation message\n");
-
+  *from_client = pd;
   return cp;
 }
 
@@ -58,19 +50,14 @@ int client_handshake( int *to_server){
   //8) client recieves server's message throught private pipe
   int cp;
   cp= open (p, O_RDONLY);
-  printf("[Client %d] connected privately to server", pid);
+  printf("[Client %d] connected privately to server\n", pid);
 
   char smessage[26];
   read (cp, smessage, 26);
   printf("[Client %d] recieved message: %s\n", pid, smessage);
 
-  int f = fork();
-  if (f == 0){
-    char * commands[3];
-    commands[0] = "rm";
-    commands[1] = smessage;
-    commands[2] = NULL;
-    printf("[Client %d] removed private pipe\n", pid);
-  }
+  remove(p);
+  printf("[Client %d] removed private pipe\n", pid);
+  *to_server = cp;
   return cp;
 }
